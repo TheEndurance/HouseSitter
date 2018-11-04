@@ -1,0 +1,45 @@
+<head>
+  <title>HouseSitter</title>
+</head>
+
+<body>
+  {{> selectHouse}}
+  {{> showHouse}}
+  {{> houseForm}}
+</body>
+
+
+<template name="selectHouse">
+  <select id="#selectHouse">
+    <option value="" {{isSelected}}></option>
+    {{#each housesNameId}}
+      <option value="{{_id}}" {{isSelected}}>{{name}}</option>
+    {{/each}}
+  </select>
+</template>
+
+<template name="showHouse">
+  {{#with house}}
+    <h2>Taking care of {{name}}'s house</h2>
+    <p>Last visit: {{lastvisit}}</p>
+    {{#each plants}}
+      {{> plantDetails}}
+    {{/each}}
+  {{/with}}
+</template>
+
+<template name="plantDetails">
+  <p>
+    <strong>Plant color: </strong>{{color}}
+  </p>
+  <p>
+    <strong>Instructions:</strong> {{instructions}}
+    <button class="water" data-id="{{../_id}}-{{color}}" {{isWatered}}>Done</button>
+    </p>
+</template>
+
+<template name="houseForm">
+
+</template>
+
+
