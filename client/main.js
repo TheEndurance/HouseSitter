@@ -39,6 +39,27 @@ Template.selectHouse.events({
   }
 });
 
+/*
+  Show House
+  ---------------------------------------------------------------------------------
+ */
+
+Template.showHouse.helpers({
+  house() {
+    return Houses.findOne({ _id: Session.get(SELECTED_HOUSE_ID) });
+  }
+});
+
+
+Template.showHouse.events({
+  'click button#delete': function (evt) {
+    var id = this._id;
+    var deleteConfirmation = confirm('Really delete this house?');
+    if (deleteConfirmation) {
+      Houses.remove(id);
+    }
+  }
+});
 
 /*
   Plant details
@@ -62,8 +83,8 @@ Template.plantDetails.events({
     var plantId = $(evt.currentTarget).attr('data-id');
     Session.set(plantId, true);
     var lastvisit = new Date();
-    HousesCollection.update({
-      _id: Session.get("selectedHouseId")
+    Houses.update({
+      _id: Session.get(SELECTED_HOUSE_ID)
     }, {
         $set: {
           lastvisit: lastvisit
@@ -71,3 +92,29 @@ Template.plantDetails.events({
       });
   }
 });
+
+
+
+/*
+  House form
+  ---------------------------------------------------------------------------------
+ */
+
+Template.houseForm.events({
+  'click button#saveHouse': function (evt) {
+    evt.preventDefault();
+    var houseName = $('input[id=house-name]').val();
+    var plantColor = $('input[id=plant-color]').val();
+    var plantInstructions = $('input[id=plant-instructions]').val();
+    Session.set('selectedHouseId', Houses.insert({
+      name: houseName,
+      plants: [{
+        color: plantColor,
+        instructions: plantInstructions
+      }]
+    }));
+    // empty the form
+    $('input').val('');
+  }
+});
+
