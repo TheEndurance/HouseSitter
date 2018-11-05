@@ -3,9 +3,7 @@
 </head>
 
 <body>
-  {{> selectHouse}}
-  {{> showHouse}}
-  {{> houseForm}}
+  {{> selectHouse}} {{> showHouse}} {{> houseForm}}
 </body>
 
 
@@ -13,20 +11,17 @@
   <select id="selectHouse">
     <option value="" {{isSelected}}></option>
     {{#each housesNameId}}
-      <option value="{{_id}}" {{isSelected}}>{{name}}</option>
+    <option value="{{_id}}" {{isSelected}}>{{name}}</option>
     {{/each}}
   </select>
 </template>
 
 <template name="showHouse">
   {{#with house}}
-    <h2>Taking care of {{name}}'s house</h2>
-    <p>Last visit: {{lastvisit}}</p>
-    <button id="delete">Delete this house</button>
-    {{#each plants}}
-      {{> plantDetails}}
-    {{/each}}
-  {{else}}
+  <h2>Taking care of {{name}}'s house</h2>
+  <p>Last visit: {{lastvisit}}</p>
+  <button id="delete">Delete this house</button>
+  {{#each plants}} {{> plantDetails}} {{/each}} {{else}}
   <p>Nothing to display...</p>
   {{/with}}
 </template>
@@ -38,20 +33,31 @@
   <p>
     <strong>Instructions:</strong> {{instructions}}
     <button class="water" data-id="{{../_id}}-{{color}}" {{isWatered}}>Done</button>
-    </p>
+  </p>
 </template>
 
 <template name="houseForm">
-  <h3>Add a house</h3>
+  {{#with selectedHouse}}
+  <h3>Edit {{name}}'s house</h3>
   <form id="houseForm">
-    Name <input id="house-name" type="text" placeholder="Name"><br/>
-    Plant<br/>
-    Color <input id="plant-color" type="text">
-    Instructions <input id="plant-instructions" type="text">
+    <fieldset id="house-name">
+      Name <input id="house-name" class="name" type="text" placeholder="Name" value="{{name}}"><br/>
+    </fieldset>
+    <label>Plants</label>
+
+    {{#each plants}} {{> plantFieldset plant=this index=@index}} {{/each}}
+    <button class="addPlant">Add Plant</button>
     <br/>
-    <br/>
-    <button id="saveHouse">Save House</button>
+    <button id="save-house" data-id="{{_id}}">Save House</button>
   </form>
+  {{/with}}
 </template>
 
 
+<template name="plantFieldset">
+  <fieldset>
+    Color <input class="color" type="text" value="{{plant.color}}" data-index="{{index}}"> 
+    Instructions <input class="instructions" type="text" value="{{plant.instructions}}" data-index="{{index}}">
+    <button class="removePlant" data-index="{{index}}">Remove Plant</button>
+  </fieldset>
+</template>

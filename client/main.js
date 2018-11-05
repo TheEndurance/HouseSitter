@@ -46,7 +46,7 @@ Template.selectHouse.events({
 
 Template.showHouse.helpers({
   house() {
-    return Houses.findOne({ _id: Session.get(SELECTED_HOUSE_ID) });
+    return LocalHouses.findOne({ _id: Session.get(SELECTED_HOUSE_ID) });
   }
 });
 
@@ -93,28 +93,54 @@ Template.plantDetails.events({
   }
 });
 
-
-
 /*
   House form
   ---------------------------------------------------------------------------------
  */
 
 Template.houseForm.events({
-  'click button#saveHouse': function (evt) {
+  'keyup #house-name'(evt) {
     evt.preventDefault();
-    var houseName = $('input[id=house-name]').val();
-    var plantColor = $('input[id=plant-color]').val();
-    var plantInstructions = $('input[id=plant-instructions]').val();
-    Session.set('selectedHouseId', Houses.insert({
-      name: houseName,
-      plants: [{
-        color: plantColor,
-        instructions: plantInstructions
-      }]
-    }));
-    // empty the form
-    $('input').val('');
+    const modifier = { $set: { name: evt.target.value } };
+    updateLocalHouse(Session.get(SELECTED_HOUSE_ID), modifier);
+  },
+  'click button.addPlant'(evt) {
+    evt.preventDefault();
+    const newPlant = { color: '', instructions: '' };
+    const modifier = { $push: { plants: newPlant } };
+    updateLocalHouse(Session.get(SELECTED_HOUSE_ID), modifier);
+  },
+  'click button#save-house'(evt) {
+    evt.preventDefault();
+    const id = Session.get(SELECTED_HOUSE_ID);
+    const modifier = { $set: { 'lastsave': new Date() } };
+    updateLocalHouse(id, modifier);
+    Houses.upsert({ _id: id }, LocalHouses.findOne(id));
   }
 });
 
+Template.plantFieldset.events({
+  'keyup input.color, keyup input.instructions'(evt) {
+    evt.preventDefault();
+    const index = evt.target.getAttribute('data-index');
+    const field = evt.target.getAttribute('class');
+    const plants = `plants.${index}.${field}`;
+    const modifier = { $set: {} };
+    modifier['$set'][plants] = evt.target.value;
+    updateLocalHouse(Session.get(SELECTED_HOUSE_ID), modifier);
+  },
+  'click button.removePlant'(evt) {
+    evt.preventDefault();
+    const id = Session.get(SELECTED_HOUSE_ID);
+    const index = evt.target.getAttribute('data-index');
+    const plants = LocalHouses.findOne(id).plants;
+    plants.splice(index, 1);
+    const modifier = { $set: { 'plants': plants } };
+    updateLocalHouse(id, modifier);
+  }
+});
+
+
+updateLocalHouse = function (id, modifier) {
+  LocalHouses.update({ _id: id }, modifier);
+}
