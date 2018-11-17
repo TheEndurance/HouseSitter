@@ -112,7 +112,7 @@ Template.houseForm.onCreated(function () {
     const houseId = Session.get(SELECTED_HOUSE_ID);
     if (houseId) {
       const localHouse = LocalHouses.findOne(houseId);
-      if (localHouse.status === 'unsaved') {
+      if (localHouse.status && localHouse.status === 'unsaved') {
         const remoteHouse = Houses.findOne(houseId);
         if (remoteHouse.lastsave > localHouse.lastsave) {
           Session.set('notification', {
