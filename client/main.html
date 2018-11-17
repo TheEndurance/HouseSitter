@@ -3,9 +3,17 @@
 </head>
 
 <body>
-  {{> selectHouse}} {{> showHouse}} {{> houseForm}}
+  {{> notificationArea}}
+  {{> selectHouse}}
+  {{> showHouse}}
+  {{> houseForm}}
 </body>
 
+<template name="notificationArea">
+  {{#if notification}}
+  <p class="{{notification.type}}">{{notification.text}}</p>
+  {{/if}}
+</template>
 
 <template name="selectHouse">
   <select id="selectHouse">

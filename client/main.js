@@ -13,6 +13,14 @@ const newHouse = {
 const SELECTED_HOUSE_ID = 'selectedHouseId';
 Session.setDefault(SELECTED_HOUSE_ID, '');
 
+
+Template.notificationArea.helpers({
+  notification() {
+    return Session.get('notifications');
+  }
+});
+
+
 Template.registerHelper('selectedHouse', function () {
   return LocalHouses.findOne(Session.get(SELECTED_HOUSE_ID));
 });
@@ -56,6 +64,7 @@ Template.showHouse.events({
     var id = this._id;
     var deleteConfirmation = confirm('Really delete this house?');
     if (deleteConfirmation) {
+      LocalHouses.remove(id);
       Houses.remove(id);
     }
   }
@@ -98,22 +107,45 @@ Template.plantDetails.events({
   ---------------------------------------------------------------------------------
  */
 
+Template.houseForm.onCreated(function () {
+  this.autorun(() => {
+    const houseId = Session.get(SELECTED_HOUSE_ID);
+    if (houseId) {
+      const localHouse = LocalHouses.findOne(houseId);
+      if (localHouse.status === 'unsaved') {
+        const remoteHouse = Houses.findOne(houseId);
+        if (remoteHouse.lastsave > localHouse.lastsave) {
+          Session.set('notification', {
+            type: 'warning',
+            text: 'This document has been changed inside the database!'
+          });
+        } else {
+          Session.set('notification', {
+            type: 'reminder',
+            text: 'Remember to save your changes'
+            });
+        }
+      }
+    }
+  });
+});
+
 Template.houseForm.events({
   'keyup #house-name'(evt) {
     evt.preventDefault();
-    const modifier = { $set: { name: evt.target.value } };
+    const modifier = { $set: { name: evt.target.value, status: 'unsaved' } };
     updateLocalHouse(Session.get(SELECTED_HOUSE_ID), modifier);
   },
   'click button.addPlant'(evt) {
     evt.preventDefault();
     const newPlant = { color: '', instructions: '' };
-    const modifier = { $push: { plants: newPlant } };
+    const modifier = { $push: { plants: newPlant }, $set: { 'status' : 'unsaved'} };
     updateLocalHouse(Session.get(SELECTED_HOUSE_ID), modifier);
   },
   'click button#save-house'(evt) {
     evt.preventDefault();
     const id = Session.get(SELECTED_HOUSE_ID);
-    const modifier = { $set: { 'lastsave': new Date() } };
+    const modifier = { $set: { 'lastsave': new Date(), status: 'saved' } };
     updateLocalHouse(id, modifier);
     Houses.upsert({ _id: id }, LocalHouses.findOne(id));
   }
@@ -127,6 +159,7 @@ Template.plantFieldset.events({
     const plants = `plants.${index}.${field}`;
     const modifier = { $set: {} };
     modifier['$set'][plants] = evt.target.value;
+    modifier['$set'].status = 'unsaved';
     updateLocalHouse(Session.get(SELECTED_HOUSE_ID), modifier);
   },
   'click button.removePlant'(evt) {
@@ -135,7 +168,7 @@ Template.plantFieldset.events({
     const index = evt.target.getAttribute('data-index');
     const plants = LocalHouses.findOne(id).plants;
     plants.splice(index, 1);
-    const modifier = { $set: { 'plants': plants } };
+    const modifier = { $set: { 'plants': plants, status: 'unsaved' } };
     updateLocalHouse(id, modifier);
   }
 });
