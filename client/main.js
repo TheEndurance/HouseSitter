@@ -16,7 +16,7 @@ Session.setDefault(SELECTED_HOUSE_ID, '');
 
 Template.notificationArea.helpers({
   notification() {
-    return Session.get('notifications');
+    return Session.get('notification');
   }
 });
 
@@ -116,15 +116,20 @@ Template.houseForm.onCreated(function () {
         const remoteHouse = Houses.findOne(houseId);
         if (remoteHouse.lastsave > localHouse.lastsave) {
           Session.set('notification', {
-            type: 'warning',
+            type: 'alert alert-warning',
             text: 'This document has been changed inside the database!'
           });
         } else {
           Session.set('notification', {
-            type: 'reminder',
+            type: 'alert alert-info',
             text: 'Remember to save your changes'
             });
         }
+      } else {
+        Session.set('notification', {
+          type: '',
+          text: ''
+        });
       }
     }
   });
@@ -173,6 +178,10 @@ Template.plantFieldset.events({
   }
 });
 
+
+Accounts.ui.config({
+  passwordSignupFields: 'USERNAME_AND_OPTIONAL_EMAIL'
+});
 
 updateLocalHouse = function (id, modifier) {
   LocalHouses.update({ _id: id }, modifier);
